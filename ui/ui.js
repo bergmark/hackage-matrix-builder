@@ -78,7 +78,7 @@
               var logHeader = $("<div>").text(r.length + " dependencies failed to compile:");
               $("#log-container").append(logHeader);
               r.forEach(function (v) {
-                var pre = $("<pre>").addClass(".log-entry").text(v.message);
+                var pre = $("<pre>").addClass("log-entry").text(v.message);
                 $("#log-container").append(pre);
               });
             });

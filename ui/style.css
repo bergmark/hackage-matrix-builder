@@ -99,9 +99,14 @@ td.fail-unknown { background-color: #000000; }
 }
 #log-container {
   border: 1px solid black;
+  margin: 20px;
+  padding: 5px;
 }
 #log-container .log-entry {
-  border: 5px solid red;
+  margin: 5px;
+  height: 400px;
+  overflow: scroll;
+  border: 1px solid black;
 }
 .fail-dep-build:hover {
   cursor: pointer;
