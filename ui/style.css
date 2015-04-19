@@ -3,7 +3,7 @@ table {
     border-collapse: collapse;
 }
 
-td { 
+td {
     border-top:    1px dotted black;
     border-bottom: 1px dotted black;
     border-right:  1px solid black;
@@ -22,7 +22,7 @@ td.stcell {
     text-align: center;
 }
 
-th { 
+th {
     border: 1px solid black;
     padding-left: 5px;
     padding-right: 5px;
@@ -88,3 +88,21 @@ td.pass-no-op { background-color: #00cc00; }
 td.fail-build { background-color: #ff0000; }
 td.fail-dep-build { background-color: #770000; }
 td.fail-unknown { background-color: #000000; }
+
+#header {
+  margin-bottom: 40px;
+  height: auto;
+}
+#header #select-package {
+  width: 200px;
+  font-size: 32px;
+}
+#log-container {
+  border: 1px solid black;
+}
+#log-container .log-entry {
+  border: 5px solid red;
+}
+.fail-dep-build:hover {
+  cursor: pointer;
+}

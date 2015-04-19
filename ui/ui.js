@@ -12,9 +12,12 @@
   }
 
   function main () {
+    var pkgName = /\/package\/([^\/]+)$/.test(window.location.href)
+                && RegExp.$1;
+
     api.Package.list(function ok (l) {
 
-      var s = $("<select/>");
+      var s = $("<select/>").attr("id", "select-package");
       s.change(function () {
         selectedPackage($(this).val());
       });
@@ -24,8 +27,9 @@
       });
       $("#package-list").append(s);
 
-      if (l.items.length > 0) {
-        console.log(l.items[0]);
+      if (pkgName) {
+        selectedPackage(pkgName);
+      } else if (l.items.length > 0) {
         selectedPackage(l.items[0]);
       }
 
@@ -33,11 +37,14 @@
   }
 
   function selectedPackage (pkgName) {
-    api.Package.byName(pkgName).get(packageLoaded, fail("Package.byName"));
+    $("#select-package").val(pkgName);
+    api.Package.byName(pkgName).get(packageLoaded.bind(null, pkgName), fail("Package.byName"));
   }
 
-  function packageLoaded (p) {
+  function packageLoaded (pkgName, p) {
+    window.history.replaceState(null, pkgName, "/package/" + pkgName);
     $("#package").html("");
+
     var t = $("<table>");
 
     var cols = p.ghcVersions.length;
@@ -51,16 +58,36 @@
         var ghcVersion = p.ghcVersions[x];
         var ghcVersionName = ghcVersion.ghcVer.name;
         var res = ghcVersion.resultsA[y];
-        td.attr("data-ghc-version", "ghc-" + ghcVersionName);
-        td.attr("data-package-version", "version-" + versionName);y
+        td.attr("data-ghc-version", ghcVersionName)
+          .attr("data-package-version", versionName);
+        var r;
         if (res.result.ok) {
-          td.text("GHC-" + ghcVersionName + "/" + versionName + " OK");
-          td.addClass("pass-build");
+          td.text("OK")
+            .addClass("pass-build");
+        } else if (res.result.noIp) {
+          td.text("OK (no-ip)")
+            .addClass("pass-no-ip");
         } else if (res.result.fail) {
-          td.text("GHC-" + ghcVersionName + "/" + versionName + " FAIL");
-          td.addClass("fail-build");
+          td.text("FAIL (pkg)")
+            .addClass("fail-build");
+        } else if (r = res.result.failDeps) {
+          td.text("FAIL (" + r.length + " deps)")
+            .addClass("fail-dep-build")
+            .click(function (e) {
+              $("#log-container").html("");
+              var logHeader = $("<div>").text(r.length + " dependencies failed to compile:");
+              $("#log-container").append(logHeader);
+              r.forEach(function (v) {
+                var pre = $("<pre>").addClass(".log-entry").text(v.message);
+                $("#log-container").append(pre);
+              });
+            });
+        } else if (res.result.nop) {
+          td.text("OK (boot)")
+            .addClass("pass-no-op");
         } else {
           console.warn("unhandled result: ", res.result);
+          td.addClass("fail-unknown");
         }
         tr.append(td);
       }
@@ -69,16 +96,22 @@
 
     var header = $("<tr>");
     t.find("tr").each(function (i, tr) {
-      console.log(i,tr, p.versions[i].version.name);
-      var th = $("<th>").addClass("pkgv").text(p.versions[i].version.name);
+      var th = $("<th>").addClass("pkgv");
+      var versionName = p.versions[i].version.name;
+      th.append
+        ( $("<a>").text("Δ").attr("href", "http://hdiff.luite.com/cgit/" + pkgName + "/commit?id=" + versionName)
+        , " "
+        , $("<a>").attr("href", "https://hackage.haskell.org/package/" + pkgName + "-" + versionName + "/" + pkgName + ".cabal/edit").text(versionName)
+        );
       $(tr).prepend(th);
     });
 
     t.prepend((function () {
       var tr = $("<tr>");
-      tr.append($("<td>"));
+      tr.append($("<th>").append($("<a>").attr("href", "https://hackage.haskell.org/package/" + pkgName).text(pkgName)));
       for (var i = 0; i < p.ghcVersions.length; i++) {
-        tr.append($("<td>").text(p.ghcVersions[i].ghcVer.name));
+        var versionName = p.ghcVersions[i].ghcVer.name;
+        tr.append($("<th>").text(versionName));
       }
       return tr;
     })());
