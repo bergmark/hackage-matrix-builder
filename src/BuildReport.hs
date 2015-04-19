@@ -1,30 +1,25 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass        #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE PartialTypeSignatures #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards       #-}
 
-module BuildReport (ReportData(..), ReportDataJson (..), genHtmlReport, docToBS, reportDataJson) where
+module BuildReport (ReportData(..), genHtmlReport, docToBS) where
 
 import           Blaze.ByteString.Builder
 import           Control.Lens
+import           Data.Aeson
 import           Data.Bits
 import           Data.Function
 import           Data.List
-import Data.Char
-import Data.JSON.Schema
-import Generics.Generic.Aeson
-import Rest.StringMap.Map.Strict
-import Data.Aeson
-import qualified Data.Map.Strict as Map
+import qualified Data.Map.Strict          as Map
 import           Data.Maybe
 import           Data.Monoid
 import           Data.Ord
-import qualified Data.Set as Set
-import qualified Data.Text as T
+import qualified Data.Set                 as Set
+import qualified Data.Text                as T
 import           Text.XmlHtml
 
 import           BuildTypes
@@ -37,31 +32,6 @@ data ReportData = ReportData
                                   , Map PkgVerPfx (Maybe PkgVer)
                                   )
     } deriving (Show,Read,Generic,NFData,FromJSON,ToJSON)
-
-data ReportDataJson = ReportDataJson
-    { rdjPkgName     :: PkgName
-    , rdjVersions    :: StringMap PkgVer ( PkgRev, Bool )
-    , rdjGVersions   :: StringMap GhcVer ( PkgVer
-                                         , StringMap PkgVer BuildResult
-                                         , StringMap String (Maybe PkgVer)
-                                         )
-    } deriving (Generic, Show)
-
-reportDataJson :: ReportData -> ReportDataJson
-reportDataJson m = ReportDataJson
-    { rdjPkgName     = rdPkgName m
-    , rdjVersions    = fromMap $ rdVersions m
-    , rdjGVersions   = fromMap $ x <$> rdGVersions m
-    }
-    where
-      x :: (PkgVer,       Map PkgVer BuildResult,       Map PkgVerPfx (Maybe PkgVer))
-        -> (PkgVer, StringMap PkgVer BuildResult, StringMap String (Maybe PkgVer))
-      x (a,b,c) = (a, fromMap b, fromMap $ Map.mapKeys (map (chr . fromIntegral)) c)
-
-
-instance ToJSON     ReportDataJson where toJSON    = gtoJson
-instance FromJSON   ReportDataJson where parseJSON = gparseJson
-instance JSONSchema ReportDataJson where schema    = gSchema
 
 -- TODO: Unify this with 'Status' somehow
 data Status

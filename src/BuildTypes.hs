@@ -1,13 +1,12 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass        #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE PartialTypeSignatures #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE StandaloneDeriving    #-}
+{-# LANGUAGE ViewPatterns          #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -27,37 +26,33 @@ module BuildTypes
     , ToJSON
     ) where
 
-import           Data.JSON.Schema
-import           Data.String.ToString
-import           Data.String
-import           Data.Aeson
-import           Data.Text (Text)
 import           Control.Monad
-import           Data.Aeson (FromJSON,ToJSON)
-import qualified Data.Aeson as J
-import           Generics.Generic.Aeson
+import           Data.Aeson                   (FromJSON, ToJSON)
+import qualified Data.Aeson                   as J
 import           Data.Bifunctor
-import           Data.Bitraversable
 import           Data.Binary
+import           Data.Bitraversable
 import           Data.Bits
 import           Data.Hashable
 import           Data.List
-import qualified Data.Map as Map
+import qualified Data.Map                     as Map
 import           Data.Maybe
-import           Data.Monoid ((<>))
-import qualified Data.Set as Set
-import           Data.Text (Text)
+import           Data.Monoid                  ((<>))
+import qualified Data.Set                     as Set
+import           Data.String
+import           Data.String.ToString
+import           Data.Text                    (Text)
 import           Data.Version
 import           GHC.Generics
 import           Numeric.Natural
 import           System.Exit
-import           Text.ParserCombinators.ReadP (readP_to_S, ReadP)
+import           Text.ParserCombinators.ReadP (ReadP, readP_to_S)
 
 import           Control.DeepSeq
-import qualified Crypto.Hash.SHA256 as SHA256
-import           Data.ByteString (ByteString)
-import qualified Data.ByteString.Base16 as B16
-import qualified Data.ByteString.Char8 as BC
+import qualified Crypto.Hash.SHA256           as SHA256
+import           Data.ByteString              (ByteString)
+import qualified Data.ByteString.Base16       as B16
+import qualified Data.ByteString.Char8        as BC
 
 -- orphans
 deriving instance Generic ExitCode
@@ -71,19 +66,6 @@ data GhcVer = GHC_7_00
             | GHC_7_08
             | GHC_7_10
             deriving (Eq,Ord,Bounded,Enum,Read,Show,Hashable,Binary,NFData,Generic,FromJSON,ToJSON)
-
-instance ToString GhcVer where
-  toString = show
-instance IsString GhcVer where
-  fromString = \case
-    "GHC_7_00" -> GHC_7_00
-    "GHC_7_02" -> GHC_7_02
-    "GHC_7_04" -> GHC_7_04
-    "GHC_7_06" -> GHC_7_06
-    "GHC_7_08" -> GHC_7_08
-    "GHC_7_10" -> GHC_7_10
-
-
 
 ghcVers :: [GhcVer]
 ghcVers = [minBound..maxBound]
@@ -102,8 +84,6 @@ parseGhcVer' s = fromMaybe (error $ "parseGhcVer " ++ show s) . parseGhcVer $ s
 newtype PkgName = PkgName String
                 deriving (Show,Read,Eq,Ord,Generic,NFData,Hashable,Binary,FromJSON,ToJSON)
 
-instance JSONSchema PkgName where schema _ = Any
-
 instance IsString PkgName where fromString = PkgName
 instance ToString PkgName where toString = unPkgName
 
@@ -113,10 +93,6 @@ unPkgName (PkgName s) = s
 -- | Our variant of 'Data.Version.Version'
 newtype PkgVer = PkgVer [Word]
                deriving (Show,Read,Eq,Ord,Generic,NFData,Hashable,Binary,FromJSON,ToJSON)
-
---instance ToJSON     PkgVer where toJSON    = toJSON . toString
---instance FromJSON   PkgVer where parseJSON = fmap fromString . parseJSON
-instance JSONSchema PkgVer where schema _  = Any
 
 instance IsString PkgVer where
   fromString = fromMaybe (error "PkgVer.fromString") . parsePkgVer
@@ -233,10 +209,6 @@ data BuildResult
     | BuildFail !Text -- build-output
     | BuildFailDeps [(PkgId,Text)] -- failed deps & associated build-outputs
     deriving (Show,Read,Generic,NFData,FromJSON,ToJSON)
-
---instance ToJSON     BuildResult where toJSON    = gtoJson
---instance FromJSON   BuildResult where parseJSON = gparseJson
-instance JSONSchema BuildResult where schema _  = Any
 
 hashDeps :: [PkgId] -> String
 hashDeps = BC.unpack .B16.encode . SHA256.hash . BC.pack . show

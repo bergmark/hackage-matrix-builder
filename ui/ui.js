@@ -40,31 +40,48 @@
     $("#package").html("");
     var t = $("<table>");
 
-    var ghcVersions = [];
-    for (var gv in p.rdjGVersions) {
-      ghcVersions.push({ key : gv, name : p.rdjGVersions[gv][0] });
-    }
-    var tr = $("<tr>");
-    tr.append("<td>");
-    tr.append(ghcVersions.map(function (gv) {
-      return $("<td>").text(gv.name);
-    }))
-    t.append(tr);
+    var cols = p.ghcVersions.length;
+    var rows = p.versions.length;
 
-    var vs = [];
-    for (var v in p.rdjVersions) {
-      vs.push(v);
-    }
-    vs.sort();
-
-    vs.forEach(function (v) {
-      var tr = $("<tr>");
-      $("<td>").text(v).appendTo(tr);
-      for (var gv in p.rdjGVersions) {
-
+    for (var y = 0; y < rows; y++) {
+      var tr = $("<tr>").addClass("solver-row");
+      var versionName = p.versions[y].version.name;
+      for (var x = 0; x < cols; x++) {
+        var td = $("<td>").addClass("stcell").addClass("lastmaj");
+        var ghcVersion = p.ghcVersions[x];
+        var ghcVersionName = ghcVersion.ghcVer.name;
+        var res = ghcVersion.resultsA[y];
+        td.attr("data-ghc-version", "ghc-" + ghcVersionName);
+        td.attr("data-package-version", "version-" + versionName);y
+        if (res.result.ok) {
+          td.text("GHC-" + ghcVersionName + "/" + versionName + " OK");
+          td.addClass("pass-build");
+        } else if (res.result.fail) {
+          td.text("GHC-" + ghcVersionName + "/" + versionName + " FAIL");
+          td.addClass("fail-build");
+        } else {
+          console.warn("unhandled result: ", res.result);
+        }
+        tr.append(td);
       }
       t.append(tr);
+    }
+
+    var header = $("<tr>");
+    t.find("tr").each(function (i, tr) {
+      console.log(i,tr, p.versions[i].version.name);
+      var th = $("<th>").addClass("pkgv").text(p.versions[i].version.name);
+      $(tr).prepend(th);
     });
+
+    t.prepend((function () {
+      var tr = $("<tr>");
+      tr.append($("<td>"));
+      for (var i = 0; i < p.ghcVersions.length; i++) {
+        tr.append($("<td>").text(p.ghcVersions[i].ghcVer.name));
+      }
+      return tr;
+    })());
 
     $("#package").append(t);
   }
