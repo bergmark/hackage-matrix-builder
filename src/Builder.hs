@@ -48,7 +48,7 @@ indexTar = unsafePerformIO (getAppUserDataDirectory "cabal") </> "packages/hacka
 
 -- | Path to @cabal@ frontend (tested only with 1.22)
 cabalExe :: FilePath
-cabalExe = "/opt/cabal/1.22/bin/cabal"
+cabalExe = "cabal"
 
 -- | @xcabal@ frontend (get it from https://github.com/hvr/xcabal)
 xcabalExe :: FilePath
@@ -56,14 +56,14 @@ xcabalExe = "xcabal"
 
 -- | Path where to find @ghc@ and @ghc-pkg@.
 ghcBinPath :: GhcVer -> FilePath
-ghcBinPath v = "/opt/ghc/" ++ v' ++ "/bin/"
+ghcBinPath v = "/Users/adam/.ghc-" ++ v' ++ "/bin/"
   where
     v' = case v of
         GHC_7_00 -> "7.0.4"
         GHC_7_02 -> "7.2.2"
         GHC_7_04 -> "7.4.2"
         GHC_7_06 -> "7.6.3"
-        GHC_7_08 -> "7.8.4"
+        GHC_7_08 -> "7.8.3"
         GHC_7_10 -> "7.10.1"
 
 addGhcPath :: GhcVer -> Action CmdOption
