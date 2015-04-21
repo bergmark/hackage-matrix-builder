@@ -11,6 +11,7 @@ import           Data.Aeson             (FromJSON (..), ToJSON (..), decode)
 import qualified Data.ByteString.Lazy   as L
 import           Data.JSON.Schema
 import qualified Data.Map.Strict        as Map
+import           Data.String.ToString
 import           Data.Text              (pack, unpack)
 import           Generics.Generic.Aeson
 import           Rest
@@ -72,13 +73,13 @@ reportDataJson = \case
     , rdVersions  = b
     , rdGVersions = c
     } -> ReportDataJson
-      { pkgName     = unPkgName a
+      { pkgName     = toString a
       , versions    = map toVer . Map.toList $ b
       , ghcVersions = map f . Map.toList $ c
       }
     where
       toVer (x,(y,z)) = Ver
-        { version       = V { segments = unPkgVer x, name = showPkgVer x }
+        { version       = V { segments = unPkgVer x, name = toString x }
         , revision      = y
         , bo            = z
         }
@@ -98,7 +99,7 @@ reportDataJson = \case
         BuildFail t     -> Fail t
         BuildFailDeps l -> FailDeps . map (\((xx,xy),y) -> DepFailure
           { pkgId   = PackageId
-            { pPackageName    = unPkgName xx
+            { pPackageName    = toString xx
             , pPackageVersion = pkgVerToV xy
           }
           , message = y
@@ -107,7 +108,7 @@ reportDataJson = \case
 pkgVerToV :: PkgVer -> V
 pkgVerToV p = V
   { segments = unPkgVer   p
-  , name     = showPkgVer p
+  , name     = toString   p
   }
 
 ghcVerToV :: GhcVer -> V
