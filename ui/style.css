@@ -108,6 +108,6 @@ td.fail-unknown { background-color: #000000; }
   overflow: scroll;
   border: 1px solid black;
 }
-.fail-dep-build:hover {
+.fail-build:hover, .fail-dep-build:hover {
   cursor: pointer;
 }

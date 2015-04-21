@@ -44,6 +44,7 @@
   function packageLoaded (pkgName, p) {
     window.history.replaceState(null, pkgName, "/package/" + pkgName);
     $("#package").html("");
+    clearLog();
 
     var t = $("<table>");
 
@@ -67,21 +68,22 @@
         } else if (res.result.noIp) {
           td.text("OK (no-ip)")
             .addClass("pass-no-ip");
-        } else if (res.result.fail) {
-          td.text("FAIL (pkg)")
-            .addClass("fail-build");
-        } else if (r = res.result.failDeps) {
-          td.text("FAIL (" + r.length + " deps)")
-            .addClass("fail-dep-build")
-            .click(function (e) {
-              $("#log-container").html("");
-              var logHeader = $("<div>").text(r.length + " dependencies failed to compile:");
-              $("#log-container").append(logHeader);
-              r.forEach(function (v) {
-                var pre = $("<pre>").addClass("log-entry").text(v.message);
-                $("#log-container").append(pre);
+        } else if (r = res.result.fail) {
+          (function (r) {
+            td.text("FAIL (pkg)")
+              .addClass("fail-build")
+              .click(function (e) {
+                setLog("Compilation failure", [r]);
               });
-            });
+          })(r);
+        } else if (r = res.result.failDeps) {
+          (function () {
+            td.text("FAIL (" + r.length + " deps)")
+              .addClass("fail-dep-build")
+              .click(function (e) {
+                setLog(r.length + " dependencies failed to compile", r.map(function (v) { return v.message; }));
+              });
+          })(r);
         } else if (res.result.nop) {
           td.text("OK (boot)")
             .addClass("pass-no-op");
@@ -92,6 +94,21 @@
         tr.append(td);
       }
       t.append(tr);
+    }
+
+    function setLog (header, messages) {
+      $("#log-container").html("");
+      var logHeader = $("<div>").text(header);
+      $("#log-container").append(logHeader);
+      messages.forEach(function (m) {
+        var pre = $("<pre>").addClass("log-entry").text(m);
+        $("#log-container").append(pre);
+      });
+      $("#log-container").show();
+    }
+    function clearLog () {
+      $("#log-container").html("");
+      $("#log-container").hide();
     }
 
     var header = $("<tr>");
